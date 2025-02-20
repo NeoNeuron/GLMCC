@@ -13,6 +13,10 @@ example command : python3 Est_Data.py simulation_data 20 sim
 from glmcc import *
 import sys
 import subprocess as proc
+import time
+# Start measuring CPU time and wall time
+start_cpu_time = time.process_time()
+start_wall_time = time.time()
 
 args = sys.argv
 
@@ -34,7 +38,7 @@ for i in range(0, DataNum):
         filename1 = DataFileName+'/cell'+str(i)+'.txt'
         filename2 = DataFileName+'/cell'+str(j)+'.txt'
         print(filename1+' '+filename2)
-        T = 5400
+        T = 100
 
         #Make cross_correlogram
         cc_list = linear_crossCorrelogram(filename1, filename2, T)
@@ -145,3 +149,14 @@ for i in range(0, n):
 cmd = ['rm', "J_py_"+str(T)+".txt"]
 proc.check_call(cmd)
 
+# End measuring CPU time and wall time
+end_cpu_time = time.process_time()
+end_wall_time = time.time()
+
+# Calculate the elapsed CPU time and wall time
+elapsed_cpu_time = end_cpu_time - start_cpu_time
+elapsed_wall_time = end_wall_time - start_wall_time
+
+# Print the elapsed CPU time and wall time
+print(f"Elapsed CPU time: {elapsed_cpu_time:.3f} s")
+print(f"Elapsed Wall time: {elapsed_wall_time:.3f} s")

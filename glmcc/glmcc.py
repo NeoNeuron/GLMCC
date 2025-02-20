@@ -144,8 +144,8 @@ def linear_crossCorrelogram(filename1, filename2, T):
     cell_file1.close()
     cell_file2.close()
 
-    print('n_pre: '+str(len(cell1)))
-    print('n_post: '+str(len(cell2)))
+    print('n_pre: '+str(len(cell2)))
+    print('n_post: '+str(len(cell1)))
 
     # make c_ij(spike time)
     w = int(WIN)
@@ -1366,7 +1366,8 @@ if __name__ == '__main__':
             plt_GLMCC(cc_list[0], par, tau, delay_synapse, 'Py')
             plt.legend(fontsize=10)
             plt.title(args[2][:-4]+"_"+args[3][:-4]+" Histgram")
-            plt.savefig("GLMCC_"+args[2][:-4]+"_"+args[3][:-4]+".png")
+            plt.axvline(0, ls='--', color='r')
+            plt.savefig("GLMCC_"+args[2].split('/')[-1][:-4]+"_"+args[3].split('/')[-1][:-4]+".png")
             plt.show()
             plt.close()
 
