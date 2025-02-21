@@ -4,44 +4,47 @@ Estimate PSPs from Data.
 
 Input : Data file and the number of data
 
-Command : python3 Est_Data.py (Data file name) (the number of data) (sim or exp(simulation or experiment))
+Command : python3 Est_Data.py (name of folder containing data) (Data file name) (the number of data) (sim or exp(simulation or experiment))
 
-example command : python3 Est_Data.py simulation_data 20 sim
+example command : python3 Est_Data.py simulation_data data.npy 20 sim
 
 '''
 
-from glmcc import *
+from .glmcc import *
 import sys
 import subprocess as proc
 import time
+from pathlib import Path
 # Start measuring CPU time and wall time
 start_cpu_time = time.process_time()
 start_wall_time = time.time()
 
 args = sys.argv
 
-if len(args) != 5:
-    print("Usage: python3 Est_Data.py (Data file name) (the number of data) (sim or exp) (GLM or LR)")
+if len(args) != 6:
+    print("Usage: python3 Est_Data.py (name of folder containing data) (Data file name) (the number of data) (sim or exp) (GLM or LR)")
     exit(0)
 
-DataFileName = args[1]
-DataNum = int(args[2])
-mode = args[3]
+folder = Path(args[1])
+DataFileName = args[2]
+DataNum = int(args[3])
+mode = args[4]
 LR = False
 beta = 4000
-if args[4] == "LR":
+if args[5] == "LR":
     LR = True
     beta = 10000
 
+input_data = np.load(folder/DataFileName)   # shape (n_spikes, 2), first column is spike time, second column is cell index
+
 for i in range(0, DataNum):
     for j in range(0, i):
-        filename1 = DataFileName+'/cell'+str(i)+'.txt'
-        filename2 = DataFileName+'/cell'+str(j)+'.txt'
-        print(filename1+' '+filename2)
-        T = 100
+        X1 = input_data[input_data[:, 1] == i, 0]
+        X2 = input_data[input_data[:, 1] == j, 0]
+        T = 5400
 
         #Make cross_correlogram
-        cc_list = linear_crossCorrelogram(filename1, filename2, T)
+        cc_list = linear_crossCorrelogram(X1, X2, T)
 
         #set tau
         tau = [4, 4]
@@ -97,7 +100,7 @@ for i in range(0, DataNum):
             D2 = log_likelihood - log_likelihood_n
 
         #Output J
-        J_f = open("J_py_"+str(T)+".txt", 'a')
+        J_f = open(folder/("J_py_"+str(T)+".txt"), 'a')
         J_f.write(str(i)+' '+str(j)+' '
                   +str(round(par[NPAR-1], 6))+' '+str(round(par[NPAR-2], 6))+' '
                   +str(round(Jmin[1], 6))+' '+str(round(Jmin[0], 6))+' '
@@ -109,9 +112,9 @@ scale = 1.277
 z_a = 15.14
 
 #Read the required J file and create the resul file
-J_f = open("J_py_"+str(T)+".txt", 'r')
+J_f = open(folder/("J_py_"+str(T)+".txt"), 'r')
 J_f_list = J_f.readlines()
-W_f = open("W_py_"+str(T)+".csv", 'w')
+W_f = open(folder/("W_py_"+str(T)+".csv"), 'w')
 W = [[0 for i in range(n)] for j in range(n)]
 
 #calculate W
@@ -146,7 +149,7 @@ for i in range(0, n):
 #remove J file
 
 # debug
-cmd = ['rm', "J_py_"+str(T)+".txt"]
+cmd = ['rm', str(folder/("J_py_"+str(T)+".txt"))]
 proc.check_call(cmd)
 
 # End measuring CPU time and wall time

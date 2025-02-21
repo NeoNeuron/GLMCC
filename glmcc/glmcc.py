@@ -97,12 +97,13 @@ def index_linear_search(list, target, index):
             result += 1
         return result
 
-def linear_crossCorrelogram(filename1, filename2, T):
+def linear_crossCorrelogram(X1:np.ndarray, X2:np.ndarray, T:float):
     '''
     make Cross correlogram.
+    from neuron X2 to neuron X1
     
     Input:
-    file name 1, file name 2, T(s)(float or int)
+    X1, X2, T(s)(float or int)
 
     Output:
     list of spike time (list)
@@ -124,25 +125,10 @@ def linear_crossCorrelogram(filename1, filename2, T):
     
     '''
 
-    #open cell data
-    cell_file1 = open(filename1, "r")
-    cell_file2 = open(filename2, "r")
-
-    cell1 = cell_file1.readlines()
-    cell2 = cell_file2.readlines()
-
-    for i in range(len(cell1)-1, -1, -1):
-        cell1[i] = float(cell1[i])
-        if cell1[i] >= T*1000.0 or cell1[i] < 0:
-            del cell1[i]
-
-    for i in range(len(cell2)-1, -1, -1):
-        cell2[i] = float(cell2[i])
-        if cell2[i] >= T*1000.0 or cell2[i] < 0:
-            del cell2[i]
-
-    cell_file1.close()
-    cell_file2.close()
+    mask1 = (X1 < T*1000.0) * (X1 >= 0)
+    cell1 = X1[mask1]
+    mask2 = (X2 < T*1000.0) * (X2 >= 0)
+    cell2 = X2[mask2]
 
     print('n_pre: '+str(len(cell2)))
     print('n_post: '+str(len(cell1)))
@@ -1309,7 +1295,9 @@ if __name__ == '__main__':
         if args[1] == 'CC':
             # python3 glm.py CC f_pre.txt f_post.txt T
             T = float(args[4])
-            cc_list = linear_crossCorrelogram(args[3], args[2], T)
+            X1 = np.loadtxt(args[3])
+            X2 = np.loadtxt(args[2])
+            cc_list = linear_crossCorrelogram(X1, X2, T)
             bin_width = DELTA
             bin_num = int(2 * WIN / bin_width)
             plt.hist(cc_list[0], bins=bin_num, range=(-1 * WIN,WIN), stacked=False)
@@ -1345,7 +1333,9 @@ if __name__ == '__main__':
             if args[1] == 'LR':
                 LR = True
             T = float(args[7])
-            cc_list = linear_crossCorrelogram(args[3], args[2], T)
+            X1 = np.loadtxt(args[3])
+            X2 = np.loadtxt(args[2])
+            cc_list = linear_crossCorrelogram(X1, X2, T)
             tau = [0, 0]
             tau[0] = float(args[4])
             tau[1] = float(args[5])
@@ -1373,7 +1363,9 @@ if __name__ == '__main__':
 
         elif args[1] == 'GLM-Py-C':
             T = int(float(args[7]))
-            cc_list = linear_crossCorrelogram(args[3], args[2], T)
+            X1 = np.loadtxt(args[3])
+            X2 = np.loadtxt(args[2])
+            cc_list = linear_crossCorrelogram(X1, X2, T)
             tau = [0, 0]
             tau[0] = float(args[4])
             tau[1] = float(args[5])
@@ -1422,7 +1414,9 @@ if __name__ == '__main__':
 
         elif args[1] == 'GLM-with-A':
             T = int(float(args[7]))
-            cc_list = linear_crossCorrelogram(args[3], args[2], T)
+            X1 = np.loadtxt(args[3])
+            X2 = np.loadtxt(args[2])
+            cc_list = linear_crossCorrelogram(X1, X2, T)
             tau = [0, 0]
             tau[0] = float(args[4])
             tau[1] = float(args[5])
@@ -1481,7 +1475,9 @@ if __name__ == '__main__':
     elif len(args) == 11:
         if args[1] == 'W-GLM-with-A':
             T = int(float(args[7]))
-            cc_list = linear_crossCorrelogram(args[3], args[2], T)
+            X1 = np.loadtxt(args[3])
+            X2 = np.loadtxt(args[2])
+            cc_list = linear_crossCorrelogram(X1, X2, T)
             tau = [0, 0]
             tau[0] = float(args[4])
             tau[1] = float(args[5])

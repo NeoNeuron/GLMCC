@@ -1,5 +1,5 @@
 # coding: utf-8
-from glmcc import *
+from .glmcc import *
 import matplotlib.pyplot as plt
 import subprocess as proc
 import sys
