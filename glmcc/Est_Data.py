@@ -4,47 +4,62 @@ Estimate PSPs from Data.
 
 Input : Data file and the number of data
 
-Command : python3 Est_Data.py (name of folder containing data) (Data file name) (the number of data) (sim or exp(simulation or experiment))
-
-example command : python3 Est_Data.py simulation_data data.npy 20 sim
-
 '''
 
 from .glmcc import *
-import sys
 import subprocess as proc
 import time
 from pathlib import Path
+import tempfile
+import argparse
+parser = argparse.ArgumentParser(description='Estimate PSPs from Data.')
+parser.add_argument('folder', type=str, help='Name of folder containing data')
+parser.add_argument('data_file', type=str, help='Data file name')
+parser.add_argument('N', type=int, help='The number of nodes')
+parser.add_argument('T', type=float, default=5400, help='Time period used for fitting, unit: second')
+parser.add_argument('mode', type=str, choices=['sim', 'exp'], help='Mode: sim or exp')
+parser.add_argument('method', type=str, choices=['GLM', 'LR'], help='Method: GLM or LR')
+parser.add_argument('--win', type=float, default=50.0, help='Window size for cross-correlogram, unit: ms')
+parser.add_argument('--delta', type=float, default=1.0, help='size of time step for cross-correlogram, unit: ms')
+args = parser.parse_args()
+WIN = args.win
+DELTA = args.delta
+# import sys
+print(WIN)
+print(DELTA)
+# sys.exit()
+
 # Start measuring CPU time and wall time
 start_cpu_time = time.process_time()
 start_wall_time = time.time()
 
-args = sys.argv
-
-if len(args) != 6:
-    print("Usage: python3 Est_Data.py (name of folder containing data) (Data file name) (the number of data) (sim or exp) (GLM or LR)")
-    exit(0)
-
-folder = Path(args[1])
-DataFileName = args[2]
-DataNum = int(args[3])
-mode = args[4]
+folder = Path(args.folder)
+DataFileName = args.data_file
+DataNum = int(args.N)
+T = float(args.T)
+mode = args.mode
 LR = False
 beta = 4000
-if args[5] == "LR":
+if args.method == "LR":
     LR = True
     beta = 10000
 
-input_data = np.load(folder/DataFileName)   # shape (n_spikes, 2), first column is spike time, second column is cell index
+buff = tempfile.mktemp()
 
+input_data = np.load(folder/DataFileName, mmap_mode='r')   # shape (n_spikes, 2), first column is spike time, second column is cell index
+input_data = input_data[input_data[:, 0] <= T*1e3]
+cc_time = 0.0
 for i in range(0, DataNum):
     for j in range(0, i):
         X1 = input_data[input_data[:, 1] == i, 0]
         X2 = input_data[input_data[:, 1] == j, 0]
-        T = 5400
 
+        print(f"Estimating PSPs from node {j} to {i}...")
         #Make cross_correlogram
+        t0 = time.time()
         cc_list = linear_crossCorrelogram(X1, X2, T)
+        t1 = time.time()
+        cc_time += t1 - t0
 
         #set tau
         tau = [4, 4]
@@ -100,7 +115,8 @@ for i in range(0, DataNum):
             D2 = log_likelihood - log_likelihood_n
 
         #Output J
-        J_f = open(folder/("J_py_"+str(T)+".txt"), 'a')
+        # DataFileName.split
+        J_f = open(buff, 'a')
         J_f.write(str(i)+' '+str(j)+' '
                   +str(round(par[NPAR-1], 6))+' '+str(round(par[NPAR-2], 6))+' '
                   +str(round(Jmin[1], 6))+' '+str(round(Jmin[0], 6))+' '
@@ -112,9 +128,9 @@ scale = 1.277
 z_a = 15.14
 
 #Read the required J file and create the resul file
-J_f = open(folder/("J_py_"+str(T)+".txt"), 'r')
+J_f = open(buff, 'r')
 J_f_list = J_f.readlines()
-W_f = open(folder/("W_py_"+str(T)+".csv"), 'w')
+W_f = open(folder/f"W_{args.method:s}_{T:.0f}-{DataFileName.replace('.npy', ''):s}.csv", 'w')
 W = [[0 for i in range(n)] for j in range(n)]
 
 #calculate W
@@ -149,8 +165,8 @@ for i in range(0, n):
 #remove J file
 
 # debug
-cmd = ['rm', str(folder/("J_py_"+str(T)+".txt"))]
-proc.check_call(cmd)
+# cmd = ['rm', str(folder/f"J_py_{T:.0f}.txt")]
+# proc.check_call(cmd)
 
 # End measuring CPU time and wall time
 end_cpu_time = time.process_time()
@@ -161,5 +177,6 @@ elapsed_cpu_time = end_cpu_time - start_cpu_time
 elapsed_wall_time = end_wall_time - start_wall_time
 
 # Print the elapsed CPU time and wall time
+print(f"CC estimation time: {cc_time:.3f} s")
 print(f"Elapsed CPU time: {elapsed_cpu_time:.3f} s")
 print(f"Elapsed Wall time: {elapsed_wall_time:.3f} s")

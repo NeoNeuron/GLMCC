@@ -130,8 +130,8 @@ def linear_crossCorrelogram(X1:np.ndarray, X2:np.ndarray, T:float):
     mask2 = (X2 < T*1000.0) * (X2 >= 0)
     cell2 = X2[mask2]
 
-    print('n_pre: '+str(len(cell2)))
-    print('n_post: '+str(len(cell1)))
+    # print('n_pre: '+str(len(cell2)))
+    # print('n_post: '+str(len(cell1)))
 
     # make c_ij(spike time)
     w = int(WIN)
@@ -589,7 +589,8 @@ def LM(par, beta, tau, c, n_sp, t_sp, delay_synapse, cond):
             return (par.T).tolist()[0], new_log_pos, new_log_likelihood
     
         if l_c > 1000:
-            return False
+            return (par.T).tolist()[0], new_log_pos, new_log_likelihood     # if failed, just output current value
+            # return False
         
 
 def GLMCC(c, t_sp, tau, beta, pre, post, delay_synapse, cond = 0):
