@@ -62,12 +62,17 @@ Est_Data.py:
 This program estimates the connectivity matrix among the neurons in a directory. 
 You can run: 
 
-$ python3 Est_Data.py <Directory of the data> <the number of neurons> T (sim or exp) (GLM or LR)
+```python
+from glmcc.Est_Data import Est_Data
+W, cpu_time, wall_time = Est_Data(folder, DataFileName, N, T, mode='sim', method='GLMCC', indices=None)
+```
 
-where, sim (exp) corresponds to simulated (experimental) data, and GLM (LR) corresponds to original GLMCC (revised GLMCC). The output file "W_py_5400.csv" is the estimate of the connectivity matrix (in the units of the post-synaptic potential). The column (row) index represents the index of the post(pre)-synaptic neuron. 
+where, sim (exp) corresponds to simulated (experimental) data, and GLM (LR) corresponds to original GLMCC (revised GLMCC). The output file "W_GLM_5400_[spike_fname].npy" is the estimate of the connectivity matrix (in the units of the post-synaptic potential). The row (column) index represents the index of the pre(post)-synaptic neuron. 
 For example, you can analyze the simulation data in "simulation_data":
 
-$ python3 Est_Data.py simulation_data datafile.npy 20 5400 sim GLMCC
+```python
+W, _, _ = Est_Data(simulation_data, datafile, N=20, T=5400, mode='sim', method='GLMCC')
+```
 
 glmcc_fitting.py: 
 This program generates a Cross-correlation figure for each pair of neurons. 
