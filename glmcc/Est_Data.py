@@ -20,7 +20,6 @@ Z_A = 15.14
 def _process_pair(X1: np.ndarray, X2: np.ndarray, T:float, mode: str, LR:bool, beta:float, WIN:float, DELTA:float) -> float:
     # Make cross-correlogram
     t0 = time.process_time()
-    print('start computing correlation ...')
     cc_list = linear_crossCorrelogram(X1, X2, T)
 
     # set tau
